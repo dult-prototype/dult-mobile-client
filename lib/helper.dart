@@ -40,3 +40,10 @@ List<String> getAccessoryCapabilities(String accessoryCapability){
   }
   return result;
 }
+
+String? getBatteryType(String batteryType){
+  if(constants.batteryTypes.containsKey(batteryType)){
+    return constants.batteryTypes[batteryType];
+  }
+  return constants.UNKNOWN;
+}

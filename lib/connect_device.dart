@@ -26,6 +26,11 @@ class _ConnectDeviceState extends State<ConnectDevice> {
   String accessoryCategory = '';
   List<String> accessoryCapabilities = [];
   String serialNumber = '';
+  String protocolImplementationVersion = '';
+  String batteryType = '';
+  String batteryLevel = '';
+  String firmwareVersion = '';
+  String networkId = '';
 
   @override
   void initState() {
@@ -77,6 +82,11 @@ class _ConnectDeviceState extends State<ConnectDevice> {
       performAction(constants.GET_MODEL_NAME);
       performAction(constants.GET_ACCESSORY_CATEGORY);
       performAction(constants.GET_ACCESSORY_CAPABILITIES);
+      performAction(constants.GET_FIRMWARE_VERSION);
+      performAction(constants.GET_NETWORK_ID);
+      performAction(constants.GET_BATTERY_LEVEL);
+      performAction(constants.GET_BATTERY_TYPE);
+      performAction(constants.GET_PROTOCOL_IMPLEMENTATION_VERSION);
     } catch (e) {
       setState(() {
         supportsDULT = false;
@@ -114,6 +124,26 @@ class _ConnectDeviceState extends State<ConnectDevice> {
         accessoryCapabilities = helper.getAccessoryCapabilities(
             helper.convertBytesToString(value.sublist(2)));
       });
+    } else if (opcode == constants.GET_PROTOCOL_IMPLEMENTATION_VERSION_RESPONSE) {
+      setState(() {
+        protocolImplementationVersion = helper.convertBytesToString(value.sublist(2));
+      });
+    } else if (opcode == constants.GET_BATTERY_TYPE_RESPONSE) {
+      setState(() {
+        batteryType = helper.getBatteryType(helper.convertBytesToString(value.sublist(2))) ?? constants.UNKNOWN;
+      });
+    } else if (opcode == constants.GET_BATTERY_LEVEL_RESPONSE) {
+      setState(() {
+        batteryLevel = helper.convertBytesToString(value.sublist(2));
+      });
+    } else if (opcode == constants.GET_FIRMWARE_VERSION_RESPONSE) {
+      setState(() {
+        firmwareVersion = helper.convertBytesToString(value.sublist(2));
+      });
+    } else if (opcode == constants.GET_NETWORK_ID_RESPONSE) {
+      setState(() {
+        networkId = helper.convertBytesToString(value.sublist(2));
+      });
     } else if (opcode == constants.COMMAND_RESPONSE) {
       int commandOpcode = helper.bytesToInt(value.sublist(2, 4));
       int responseStatus = helper.bytesToInt(value.sublist(4));
@@ -137,10 +167,10 @@ class _ConnectDeviceState extends State<ConnectDevice> {
         showNotification(context, message, Colors.red);
       }
     } else if (opcode == constants.GET_SERIAL_NUMBER_RESPONSE) {
-      _launchUrl('${constants.serverURL}helper.convertBytesToString(value.sublist(2))');
       String message =
           'Serial Number: ${helper.convertBytesToString(value.sublist(2))}';
       showNotification(context, message, Colors.green);
+      // _launchUrl('${constants.serverURL}helper.convertBytesToString(value.sublist(2))');
     } else {
       String message = 'Unknown Response';
       showNotification(context, message, Colors.red);
@@ -280,37 +310,39 @@ class _ConnectDeviceState extends State<ConnectDevice> {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            if (isConnecting) _buildConnectingStatus(),
-            if (!isConnecting && !isConnected) _buildDisconnectedStatus(),
-            if (!supportsDULT) _buildDoesNotSupportDULT(),
-            Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Device Information',
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.bold,
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              if (isConnecting) _buildConnectingStatus(),
+              if (!isConnecting && !isConnected) _buildDisconnectedStatus(),
+              if (!supportsDULT) _buildDoesNotSupportDULT(),
+              Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Device Information',
+                            style: TextStyle(
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20.0),
-                        _buildDeviceDetails(),
-                      ],
-                    ),
-                    const SizedBox(height: 30.0),
-                    _buildDeviceFields(),
-                    const SizedBox(height: 20.0),
-                    _buildButtons(),
-                  ],
-                )),
-          ],
+                          const SizedBox(height: 20.0),
+                          _buildDeviceDetails(),
+                        ],
+                      ),
+                      const SizedBox(height: 30.0),
+                      _buildDeviceFields(),
+                      const SizedBox(height: 20.0),
+                      _buildButtons(),
+                    ],
+                  )),
+            ],
+          ),
         ));
   }
 
@@ -368,7 +400,12 @@ class _ConnectDeviceState extends State<ConnectDevice> {
         _buildField('Model Name', modelName),
         _buildField('Accessory Category', accessoryCategory),
         _buildField('Accessory Capabilities', accessoryCapabilities.join(', ')),
-        _buildField('Serial Number', serialNumber),
+        // _buildField('Serial Number', serialNumber),
+        _buildField('Battery Type', batteryType),
+        _buildField('Battery Level', batteryLevel),
+        _buildField('Protocol Implementation Version', protocolImplementationVersion),
+        _buildField('Network Id', networkId),
+        _buildField('Firmware Version', firmwareVersion),
       ],
     );
   }
